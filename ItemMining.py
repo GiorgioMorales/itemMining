@@ -10,8 +10,11 @@ class Itemset:
         self.X = itemset
         self.support = 0
 
+    def getParent(self):
+        return self.parent
+
     def addChildren(self, children=None):
-        self.children = children
+        self.children=children
 
     def getChildren(self):
         return self.children
@@ -21,6 +24,15 @@ class Itemset:
 
     def getItemset(self):
         return self.X
+
+    def addSupport(self, support):
+        self.support = support
+
+    def getSupport(self):
+        return self.support
+
+    def delChild(self, child):
+        self.children.remove(child)
 
 
 class ItemMining:
@@ -35,20 +47,39 @@ class ItemMining:
     def runApriori(self):
         frequent = []
         k = 1
-        c = {k: list([el] for el in self.table.columns)}
+        c = {k: self.root}
+        c[k].addChildren([Itemset(c[k], [x]) for x in self.table.getTable().columns])
         while c[k]:
-            support = Dataset.computeSupport(c[k], self.table)
-            newLayer = []
-            for i in range(len(c[k])):
-                if support[i] >= self.minSup:
-                    frequent.append(c[k][i])
-                    newLayer.append(c[k][i])
+            for i in c[k].getChildren():
+                sup = self.table.computeSupport(i.getItemset())
+                if sup >= self.minSup:
+                    frequent.append(i.getItemset())
+                    i.addSupport(sup)
+                else:
+                    c[k].delChild(i)
             k += 1
-            c[k] = self.extendPrefixTree(newLayer)
+            c[k] = self.extendPrefixTree(c[k-1])
         return frequent
 
     def extendPrefixTree(self, c):
-        return self.table
+        for a in c.getChildren():
+            for b in a.getSiblings()[a.getSiblings().index(a)+1:]:
+                temp = list(set(a.getItemset()+b.getItemset()))
+                if a.getSupport() < self.minSup or b.getSupport() < self.minSup:
+                    temp = None
+                if temp:
+                    if a.getChildren():
+                        a.addChildren(a.getChildren().append(Itemset(a,[temp])))
+                    else:
+                        a.addChildren([Itemset(a,[temp])])
+            if not a.getChildren():
+                temp = a.getParent()
+                temp.delChild(a)
+                while temp.getChildren() == [] and temp.getItemset() != None:
+                    t = temp.getParent()
+                    t.delChild(temp)
+                    temp = t
+        return(c)
 
     def associationRules(self):
         return self.table
@@ -58,4 +89,5 @@ class ItemMining:
 
 
 if __name__ == '__main__':
-    table = ItemMining("addr//txn_by_dept.csv", minSup=3, minConf=0.5)
+    table = ItemMining("Dataset/txn_by_dept.csv", minSup=3, minConf=0.5)
+    print(table.runApriori())
