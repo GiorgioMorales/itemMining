@@ -49,29 +49,33 @@ class ItemMining:
         k = 1
         c = {k: self.root}
         c[k].addChildren([Itemset(c[k], [x]) for x in self.table.getTable().columns])
+        k += 1
+        c[k] = c[k-1].getChildren()
         while c[k]:
-            for i in c[k].getChildren():
+            for i in c[k]:
                 sup = self.table.computeSupport(i.getItemset())
                 if sup >= self.minSup:
                     frequent.append(i.getItemset())
                     i.addSupport(sup)
                 else:
-                    c[k].delChild(i)
+                    i.getParent().delChild(i)
             k += 1
             c[k] = self.extendPrefixTree(c[k-1])
         return frequent
 
     def extendPrefixTree(self, c):
-        for a in c.getChildren():
+        for a in c:
             for b in a.getSiblings()[a.getSiblings().index(a)+1:]:
                 temp = list(set(a.getItemset()+b.getItemset()))
                 if a.getSupport() < self.minSup or b.getSupport() < self.minSup:
                     temp = None
                 if temp:
                     if a.getChildren():
-                        a.addChildren(a.getChildren().append(Itemset(a,[temp])))
+                        t = a.getChildren()
+                        t.append(Itemset(a, temp))
+                        a.addChildren(t)
                     else:
-                        a.addChildren([Itemset(a,[temp])])
+                        a.addChildren([Itemset(a,temp)])
             if not a.getChildren():
                 temp = a.getParent()
                 temp.delChild(a)
@@ -79,7 +83,14 @@ class ItemMining:
                     t = temp.getParent()
                     t.delChild(temp)
                     temp = t
-        return(c)
+        return(self.nextlayer(c))
+
+    def nextlayer(self, c):
+        layer=[]
+        for a in c:
+            if not a.getChildren() == None:
+                layer += a.getChildren()
+        return layer
 
     def associationRules(self):
         return self.table
