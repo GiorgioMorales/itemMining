@@ -133,7 +133,7 @@ class ItemMining:
 
     def associationRules(self):
         """Generate a list of association rules given a list of frequent itemsets and a minimum confidence parameter"""
-        rules = []
+        arules = []
         frequent = self.runApriori()
         for z in frequent:
             supZ = z.getSupport()  # Uses the support that was previously calculated
@@ -150,7 +150,7 @@ class ItemMining:
                         # Remove all subsets of X from A
                         A = list(set(A) - set(subsets(X, 1)))
 
-        return rules
+        return arules
 
     def rankRules(self):
         return self.table
@@ -164,8 +164,8 @@ if __name__ == '__main__':
     print("***********************************************************")
     print("***********************************************************")
     fset = table.runApriori()
-    for itemset in fset:
-        print(itemset)
+    for iset in fset:
+        print(iset)
 
     print("***********************************************************")
     print("***********************************************************")
