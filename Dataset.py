@@ -27,11 +27,6 @@ class Dataset:
 
         return int(np.sum(multColumn))
 
-    def confidence(self, c):
+    def computeRSupport(self, c):
         """Computes Relative Support given an itemset c"""
-
-        multColumn = np.ones(self.binary.shape[0])  # Creates a column of ones
-        for elem in c:
-            multColumn *= self.binary[elem].to_numpy()
-
-        return int(np.sum(multColumn))
+        return self.computeSupport(c) / self.binary.shape[0]

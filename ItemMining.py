@@ -42,11 +42,13 @@ class Itemset:
 class Rule:
     """Helper class used to describe an association rule."""
 
-    def __init__(self, X, Y, sup, conf):
+    def __init__(self, X, Y, sup, conf, rsupy):
         self.X = X
         self.Y = Y
         self.sup = sup
         self.conf = conf
+        self.rsupy = rsupy
+        self.lift = self.conf / self.rsupy
 
     def setParam(self, sup, conf):
         self.sup = sup
@@ -54,7 +56,7 @@ class Rule:
 
     def __str__(self):
         return "Rule: " + str(self.X) + " --> " + str(self.Y) + " Support: " + str(self.sup) \
-               + " Condifence: " + str(self.conf)
+               + " Condifence: " + str(self.conf) + " Lift: " + str(self.lift)
 
 
 def nextlayer(c):
@@ -71,6 +73,18 @@ def subsets(A, m):
     for i in range(m, len(A)):
         sub = sub + list(itertools.combinations(A, i))
     return sub
+
+
+def rankRules(ruls, k, m="lift"):
+    """Selects the top k association rules based on a measure m"""
+    s = []
+    if m == "lift":
+        s = sorted(ruls, key=lambda i: i.lift, reverse=True)
+    elif m == "leverage":
+        s = sorted(ruls, key=lambda i: i.lift, reverse=True)
+    else:
+        print("The only available measures are 'lift' and 'leverage'")
+    return s[0:k]
 
 
 class ItemMining:
@@ -145,19 +159,18 @@ class ItemMining:
                     A = A[0:-1]  # A<-A/X
                     c = supZ / self.table.computeSupport(X)  # Computes confidence
                     if c >= self.minConf:
-                        rules.append(Rule(X, list(set(z) - set(X)), supZ, c))  # creates the Rule (X->Z\X, sup(Z), c)
+                        rsupy = self.table.computeRSupport(list(set(z) - set(X)))  # computes relative support of Z\X
+                        arules.append(Rule(X, list(set(z) - set(X)),
+                                           supZ, c, rsupy))  # creates the Rule (X->Z\X, sup(Z), c)
                     else:
                         # Remove all subsets of X from A
                         A = list(set(A) - set(subsets(X, 1)))
 
         return arules
 
-    def rankRules(self):
-        return self.table
-
 
 if __name__ == '__main__':
-    table = ItemMining("Dataset/txn_by_dept.csv", minSup=3, minConf=0.5)
+    table = ItemMining("Dataset/txn_by_dept.csv", minSup=3, minConf=0.1)
     print("***********************************************************")
     print("***********************************************************")
     print("1: Printing frequent itemsets")
@@ -174,4 +187,13 @@ if __name__ == '__main__':
     print("***********************************************************")
     rules = table.associationRules()
     for rule in rules:
+        print(rule)
+
+    print("***********************************************************")
+    print("***********************************************************")
+    print("3: Rank association rules")
+    print("***********************************************************")
+    print("***********************************************************")
+    topRules = rankRules(rules, k=20, m="lift")
+    for rule in topRules:
         print(rule)
