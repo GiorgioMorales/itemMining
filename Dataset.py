@@ -19,15 +19,18 @@ class Dataset:
         return self.binary
 
     def computeSupport(self, c):
-        # index = 0
-        # s = 0
-        # for k in self.binary.index:
-        #     if all(self.binary.loc[k][elem] == 1 for elem in c):
-        #         s += 1
-        # index += 1
+        """Computes Support given an itemset c"""
 
-        # Creates a column of ones
-        multColumn = np.ones(self.binary.shape[0])
+        multColumn = np.ones(self.binary.shape[0])  # Creates a column of ones
+        for elem in c:
+            multColumn *= self.binary[elem].to_numpy()
+
+        return int(np.sum(multColumn))
+
+    def confidence(self, c):
+        """Computes Relative Support given an itemset c"""
+
+        multColumn = np.ones(self.binary.shape[0])  # Creates a column of ones
         for elem in c:
             multColumn *= self.binary[elem].to_numpy()
 
