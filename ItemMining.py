@@ -111,15 +111,18 @@ class ItemMining:
         self.minConf = minConf
 
     def runApriori(self):
+        """
+        The Apriori Algorithm that generates a frequent itemset based off of the table submitted in the Dataset
+        """
         frequent = []
         k = 1
         c = {k: self.root}
         c[k].addChildren([Itemset(c[k], [x]) for x in self.table.getTable().columns])
         k += 1
         c[k] = c[k - 1].getChildren()
-        while c[k]:
-            for i in c[k]:
-                sup = self.table.computeSupport(i.getItemset())
+        while c[k]: #While the layer is not empty
+            for i in c[k]:  #For each leaf in layer C^k
+                sup = self.table.computeSupport(i.getItemset()) #Calculates teh support of the leaf
                 if sup >= self.minSup:
                     frequent.append(i)
                     i.addSupport(sup)
@@ -128,14 +131,17 @@ class ItemMining:
                     if i in c[k]:
                         c[k].remove(i)
             k += 1
-            c[k] = self.extendPrefixTree(c[k - 1])
+            c[k] = self.extendPrefixTree(c[k - 1]) #Creates next layer based off of current layer
         return frequent
 
     def extendPrefixTree(self, c):
+        """
+        Creates the next layer of the prefix tree given a layer c
+        """
         for a in c:
             for b in a.getSiblings()[a.getSiblings().index(a) + 1:]:
-                temp = list(set(a.getItemset() + b.getItemset()))
-                if a.getSupport() < self.minSup or b.getSupport() < self.minSup:
+                temp = list(set(a.getItemset() + b.getItemset())) #Ca U Cb
+                if a.getSupport() < self.minSup or b.getSupport() < self.minSup: #Determines if Ca U Cb contains any elements that are below minimal support
                     temp = None
                 if temp:
                     if a.getChildren():
@@ -144,7 +150,7 @@ class ItemMining:
                         a.addChildren(t)
                     else:
                         a.addChildren([Itemset(a, temp)])
-            if not a.getChildren():
+            if not a.getChildren(): #If the leaf is the end of the branch, delete the leaf and the childless ancestors
                 temp = a.getParent()
                 temp.delChild(a)
                 while temp.getChildren() == [] and temp.getItemset() is not None:
