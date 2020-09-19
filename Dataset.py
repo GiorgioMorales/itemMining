@@ -21,11 +21,17 @@ class Dataset:
     def computeSupport(self, c):
         index = 0
         s = 0
-        for k in self.binary.index:
-            if all(self.binary.loc[k][elem] == 1 for elem in c):
-                s += 1
-        index += 1
-        return s
+        # for k in self.binary.index:
+        #     if all(self.binary.loc[k][elem] == 1 for elem in c):
+        #         s += 1
+        # index += 1
+
+        # Creates a column of ones
+        multColumn = np.ones(self.binary.shape[0])
+        for elem in c:
+            multColumn *= self.binary[elem].to_numpy()
+
+        return np.sum(multColumn)
 
 
 
