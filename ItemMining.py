@@ -55,22 +55,21 @@ class ItemMining:
         while c[k]:
             print(k)
             for i in c[k]:
-                a = datetime.datetime.now()
                 sup = self.table.computeSupport(i.getItemset())
-                b = datetime.datetime.now()
-                tt = b - a
-                print(tt.microseconds/1000)
                 if sup >= self.minSup:
                     frequent.append(i.getItemset())
                     i.addSupport(sup)
                 else:
                     i.getParent().delChild(i)
+                    if i in c[k]:
+                        c[k].remove(i)
             k += 1
             c[k] = self.extendPrefixTree(c[k - 1])
         return frequent
 
     def extendPrefixTree(self, c):
         for a in c:
+            k = a.getSiblings()
             for b in a.getSiblings()[a.getSiblings().index(a) + 1:]:
                 temp = list(set(a.getItemset() + b.getItemset()))
                 if a.getSupport() < self.minSup or b.getSupport() < self.minSup:
