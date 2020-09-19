@@ -42,13 +42,17 @@ class Itemset:
 class Rule:
     """Helper class used to describe an association rule."""
 
-    def __init__(self, X, Y, sup, conf, rsupy):
+    def __init__(self, X, Y, sup, conf, supx, supy, D):
         self.X = X
         self.Y = Y
         self.sup = sup
         self.conf = conf
-        self.rsupy = rsupy
+        self.D = D
+        self.rsup = self.sup / self.D
+        self.rsupx = supx / self.D
+        self.rsupy = supy / self.D
         self.lift = self.conf / self.rsupy
+        self.leverage = self.rsup - self.rsupx * self.rsupy
 
     def setParam(self, sup, conf):
         self.sup = sup
@@ -56,7 +60,7 @@ class Rule:
 
     def __str__(self):
         return "Rule: " + str(self.X) + " --> " + str(self.Y) + " Support: " + str(self.sup) \
-               + " Condifence: " + str(self.conf) + " Lift: " + str(self.lift)
+               + " Condifence: " + str(self.conf) + " Lift: " + str(self.lift) + " Leverage: " + str(self.leverage)
 
 
 def nextlayer(c):
@@ -75,15 +79,19 @@ def subsets(A, m):
     return sub
 
 
-def rankRules(ruls, k, m="lift"):
+def rankRules(ruls, k, m="confidence"):
     """Selects the top k association rules based on a measure m"""
     s = []
-    if m == "lift":
+    if m == "confidence":
+        s = sorted(ruls, key=lambda i: i.conf, reverse=True)
+    elif m == "support":
+        s = sorted(ruls, key=lambda i: i.sup, reverse=True)
+    elif m == "lift":
         s = sorted(ruls, key=lambda i: i.lift, reverse=True)
     elif m == "leverage":
-        s = sorted(ruls, key=lambda i: i.lift, reverse=True)
+        s = sorted(ruls, key=lambda i: i.leverage, reverse=True)
     else:
-        print("The only available measures are 'lift' and 'leverage'")
+        print("The only available measures are 'support', 'confidence', 'lift', and 'leverage'")
     return s[0:k]
 
 
@@ -157,11 +165,12 @@ class ItemMining:
                 while len(A) > 0:
                     X = list(A[-1])  # Start from the last itemset because it has more elements
                     A = A[0:-1]  # A<-A/X
-                    c = supZ / self.table.computeSupport(X)  # Computes confidence
+                    sx = self.table.computeSupport(X)
+                    c = supZ / sx  # Computes confidence
                     if c >= self.minConf:
-                        rsupy = self.table.computeRSupport(list(set(z) - set(X)))  # computes relative support of Z\X
-                        arules.append(Rule(X, list(set(z) - set(X)),
-                                           supZ, c, rsupy))  # creates the Rule (X->Z\X, sup(Z), c)
+                        sy = self.table.computeRSupport(list(set(z) - set(X)))  # computes relative support of Z\X
+                        arules.append(Rule(X, list(set(z) - set(X)), supZ, c, sx, sy,
+                                           self.table.binary.shape[0]))  # creates the Rule (X->Z\X, sup(Z), c, |D|)
                     else:
                         # Remove all subsets of X from A
                         A = list(set(A) - set(subsets(X, 1)))
@@ -194,6 +203,7 @@ if __name__ == '__main__':
     print("3: Rank association rules")
     print("***********************************************************")
     print("***********************************************************")
-    topRules = rankRules(rules, k=20, m="lift")
+    score = "confidence"  # Select score. Options: 'support', 'confidence', 'lift', and 'leverage'
+    topRules = rankRules(rules, k=20, m=score)
     for rule in topRules:
         print(rule)
