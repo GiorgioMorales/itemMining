@@ -19,8 +19,8 @@ class Dataset:
         return self.binary
 
     def computeSupport(self, c):
-        index = 0
-        s = 0
+        # index = 0
+        # s = 0
         # for k in self.binary.index:
         #     if all(self.binary.loc[k][elem] == 1 for elem in c):
         #         s += 1
@@ -31,8 +31,4 @@ class Dataset:
         for elem in c:
             multColumn *= self.binary[elem].to_numpy()
 
-        return np.sum(multColumn)
-
-
-
-
+        return int(np.sum(multColumn))
