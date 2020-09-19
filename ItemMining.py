@@ -168,7 +168,7 @@ class ItemMining:
                     sx = self.table.computeSupport(X)
                     c = supZ / sx  # Computes confidence
                     if c >= self.minConf:
-                        sy = self.table.computeRSupport(list(set(z) - set(X)))  # computes relative support of Z\X
+                        sy = self.table.computeSupport(list(set(z) - set(X)))  # computes relative support of Z\X
                         arules.append(Rule(X, list(set(z) - set(X)), supZ, c, sx, sy,
                                            self.table.binary.shape[0]))  # creates the Rule (X->Z\X, sup(Z), c, |D|)
                     else:
