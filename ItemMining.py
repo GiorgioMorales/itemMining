@@ -1,70 +1,10 @@
 from Dataset import Dataset
+from ItemsetRule import *
 import itertools
 
 
-class Itemset:
-    """Helper class used to describe each node in the tree."""
-
-    def __init__(self, parent=None, itemset=None):
-        self.parent = parent
-        self.children = None
-        self.X = itemset
-        self.support = 0
-
-    def getParent(self):
-        return self.parent
-
-    def addChildren(self, children=None):
-        self.children = children
-
-    def getChildren(self):
-        return self.children
-
-    def getSiblings(self):
-        return self.parent.children
-
-    def getItemset(self):
-        return self.X
-
-    def addSupport(self, support):
-        self.support = support
-
-    def getSupport(self):
-        return self.support
-
-    def delChild(self, child):
-        self.children.remove(child)
-
-    def __str__(self):
-        return str(self.X)
-
-
-class Rule:
-    """Helper class used to describe an association rule."""
-
-    def __init__(self, X, Y, sup, conf, supx, supy, D):
-        self.X = X
-        self.Y = Y
-        self.sup = sup
-        self.conf = conf
-        self.D = D
-        self.rsup = self.sup / self.D
-        self.rsupx = supx / self.D
-        self.rsupy = supy / self.D
-        self.lift = self.conf / self.rsupy
-        self.leverage = self.rsup - self.rsupx * self.rsupy
-        self.itemsTotal = len(self.X) + len(self.Y)
-
-    def setParam(self, sup, conf):
-        self.sup = sup
-        self.conf = conf
-
-    def __str__(self):
-        return "Rule: " + str(self.X) + " --> " + str(self.Y) + " Support: " + str(self.sup) \
-               + " Condifence: " + str(self.conf) + " Lift: " + str(self.lift) + " Leverage: " + str(self.leverage)
-
-
-def nextlayer(c):
+# Statitc methods
+def nextLayer(c):
     layer = []
     for a in c:
         if not a.getChildren() is None:
@@ -80,13 +20,12 @@ def subsets(A, m):
     return sub
 
 
-def rankRules(ruls, k, m="confidence"):
+def rankRules(ruls, k):
     """Selects the top k association rules based on a measure m"""
     # Sort and filter the rules using the relative support as the first criteria
-    s = sorted(ruls, key=lambda i: i.rsup, reverse=True)
+    s = sorted(ruls, key=lambda i: (i.rsup, i.conf, i.leverage, -i.itemsTotal), reverse=True)
     s = s[0:k]
     # Sort the rules using the confidence, leverage, and complexity (number of items in the rule)
-    s = sorted(s, key=lambda i: (i.conf, i.leverage, -i.itemsTotal), reverse=True)
 
     return s[0:k]
 
@@ -94,7 +33,7 @@ def rankRules(ruls, k, m="confidence"):
 class ItemMining:
     """Main class used for Itemset Mining. Zaki and Meira book, Chapter 8."""
 
-    def __init__(self, addr, minSup=3, minConf=0.5):
+    def __init__(self, addr, minSup=3, minConf=0.4):
         self.table = Dataset(addr)
         self.root = Itemset()
         self.minSup = minSup
@@ -154,7 +93,7 @@ class ItemMining:
                     t = temp.getParent()
                     t.delChild(temp)
                     temp = t
-        return nextlayer(c)
+        return nextLayer(c)
 
     def associationRules(self):
         """Generate a list of association rules given a list of frequent itemsets and a minimum confidence parameter"""
@@ -182,7 +121,7 @@ class ItemMining:
 
 
 if __name__ == '__main__':
-    table = ItemMining("Dataset/txn_by_dept.csv", minSup=3, minConf=0.5)
+    table = ItemMining("Dataset/txn_by_dept.csv", minSup=3, minConf=0.4)
     print("***********************************************************")
     print("***********************************************************")
     print("1: Printing frequent itemsets")
@@ -207,6 +146,6 @@ if __name__ == '__main__':
     print("***********************************************************")
     print("***********************************************************")
     score = "confidence"  # Select score. Options: 'support', 'confidence', 'lift', and 'leverage'
-    topRules = rankRules(rules, k=30, m=score)
+    topRules = rankRules(rules, k=30)
     for rule in topRules:
         print(rule)
