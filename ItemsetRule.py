@@ -32,7 +32,7 @@ class Itemset:
         self.children.remove(child)
 
     def __str__(self):
-        return str(self.X)
+        return str(self.X) + " with support: " + str(self.support)
 
 
 class Rule:
@@ -57,4 +57,4 @@ class Rule:
 
     def __str__(self):
         return "Rule: " + str(self.X) + " --> " + str(self.Y) + " Support: " + str(self.sup) \
-               + " Condifence: " + str(self.conf) + " Lift: " + str(self.lift) + " Leverage: " + str(self.leverage)
+               + " Condifence: " + str(self.conf) + " Leverage: " + str(self.leverage) + " Lift: " + str(self.lift)

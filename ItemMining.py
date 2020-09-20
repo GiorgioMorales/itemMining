@@ -1,10 +1,13 @@
+from optparse import OptionParser
+
 from Dataset import Dataset
 from ItemsetRule import *
 import itertools
 
 
-# Statitc methods
+# Static methods
 def nextLayer(c):
+    """Returns the set of itemsets of the next layer of the tree"""
     layer = []
     for a in c:
         if not a.getChildren() is None:
@@ -23,11 +26,9 @@ def subsets(A, m):
 def rankRules(ruls, k):
     """Selects the top k association rules based on a measure m"""
     # Sort and filter the rules using the relative support as the first criteria
-    s = sorted(ruls, key=lambda i: (i.rsup, i.conf, i.leverage, -i.itemsTotal), reverse=True)
+    s = sorted(ruls, key=lambda i: (i.conf, i.rsup, i.leverage, -i.itemsTotal), reverse=True)
     s = s[0:k]
-    # Sort the rules using the confidence, leverage, and complexity (number of items in the rule)
-
-    return s[0:k]
+    return s
 
 
 class ItemMining:
@@ -121,7 +122,14 @@ class ItemMining:
 
 
 if __name__ == '__main__':
-    table = ItemMining("Dataset/txn_by_dept.csv", minSup=3, minConf=0.4)
+
+    # Parse input arguments
+    optparser = OptionParser()
+    optparser.add_option('-s', '--minSup', dest='minS', default=4, type='float')
+    optparser.add_option('-c', '--minConf', dest='minC', default=0.4, type='float')
+    (options, args) = optparser.parse_args()
+
+    table = ItemMining("Dataset/txn_by_dept.csv", minSup=options.minS, minConf=options.minC)
     print("***********************************************************")
     print("***********************************************************")
     print("1: Printing frequent itemsets")
@@ -131,7 +139,7 @@ if __name__ == '__main__':
     for iset in fset:
         print(iset)
 
-    print("***********************************************************")
+    print("\n\n***********************************************************")
     print("***********************************************************")
     print("2: Printing strong association rules")
     print("***********************************************************")
@@ -140,7 +148,7 @@ if __name__ == '__main__':
     for rule in rules:
         print(rule)
 
-    print("***********************************************************")
+    print("\n\n***********************************************************")
     print("***********************************************************")
     print("3: Rank association rules")
     print("***********************************************************")
