@@ -1,4 +1,4 @@
-# Python Implementation of the Apriori and AssociationRules Algorithms 
+# Itemset Mining: Python Implementation of the Apriori and AssociationRules Algorithms 
 
 ## Description
 
