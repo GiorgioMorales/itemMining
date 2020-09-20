@@ -5,8 +5,8 @@
 This is an implementation of the algorithms described in:
 
 ```
-Mohammed J. Zaki, Wagner Meira, Jr., Data Mining and Machine Learning: Fundamental Concepts and Algorithms, Chapter 8,
-2nd Edition, Cambridge University Press, March 2020. ISBN: 978-1108473989.
+Mohammed J. Zaki, Wagner Meira, Jr., Data Mining and Machine Learning: Fundamental Concepts and Algorithms, 
+Chapter 8, 2nd Edition, Cambridge University Press, March 2020. ISBN: 978-1108473989.
 ```
 
 Our system utilizes the Apriori Algorithm to generate frequent item sets from a given sparse binary table. 
