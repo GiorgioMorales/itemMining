@@ -53,6 +53,7 @@ class Rule:
         self.rsupy = supy / self.D
         self.lift = self.conf / self.rsupy
         self.leverage = self.rsup - self.rsupx * self.rsupy
+        self.itemsTotal = len(self.X) + len(self.Y)
 
     def setParam(self, sup, conf):
         self.sup = sup
@@ -81,17 +82,12 @@ def subsets(A, m):
 
 def rankRules(ruls, k, m="confidence"):
     """Selects the top k association rules based on a measure m"""
-    s = []
-    if m == "confidence":
-        s = sorted(ruls, key=lambda i: i.conf, reverse=True)
-    elif m == "support":
-        s = sorted(ruls, key=lambda i: i.sup, reverse=True)
-    elif m == "lift":
-        s = sorted(ruls, key=lambda i: i.lift, reverse=True)
-    elif m == "leverage":
-        s = sorted(ruls, key=lambda i: i.leverage, reverse=True)
-    else:
-        print("The only available measures are 'support', 'confidence', 'lift', and 'leverage'")
+    # Sort and filter the rules using the relative support as the first criteria
+    s = sorted(ruls, key=lambda i: i.rsup, reverse=True)
+    s = s[0:k]
+    # Sort the rules using the confidence, leverage, and complexity (number of items in the rule)
+    s = sorted(s, key=lambda i: (i.conf, i.leverage, -i.itemsTotal), reverse=True)
+
     return s[0:k]
 
 
@@ -120,9 +116,9 @@ class ItemMining:
         c[k].addChildren([Itemset(c[k], [x]) for x in self.table.getTable().columns])
         k += 1
         c[k] = c[k - 1].getChildren()
-        while c[k]: #While the layer is not empty
-            for i in c[k]:  #For each leaf in layer C^k
-                sup = self.table.computeSupport(i.getItemset()) #Calculates teh support of the leaf
+        while c[k]:  # While the layer is not empty
+            for i in c[k]:  # For each leaf in layer C^k
+                sup = self.table.computeSupport(i.getItemset())  # Calculates teh support of the leaf
                 if sup >= self.minSup:
                     frequent.append(i)
                     i.addSupport(sup)
@@ -131,7 +127,7 @@ class ItemMining:
                     if i in c[k]:
                         c[k].remove(i)
             k += 1
-            c[k] = self.extendPrefixTree(c[k - 1]) #Creates next layer based off of current layer
+            c[k] = self.extendPrefixTree(c[k - 1])  # Creates next layer based off of current layer
         return frequent
 
     def extendPrefixTree(self, c):
@@ -140,8 +136,9 @@ class ItemMining:
         """
         for a in c:
             for b in a.getSiblings()[a.getSiblings().index(a) + 1:]:
-                temp = list(set(a.getItemset() + b.getItemset())) #Ca U Cb
-                if a.getSupport() < self.minSup or b.getSupport() < self.minSup: #Determines if Ca U Cb contains any elements that are below minimal support
+                temp = list(set(a.getItemset() + b.getItemset()))  # Ca U Cb
+                if a.getSupport() < self.minSup or b.getSupport() < self.minSup:  # Determines if Ca U Cb contains
+                    # any elements that are below minimal support
                     temp = None
                 if temp:
                     if a.getChildren():
@@ -150,7 +147,7 @@ class ItemMining:
                         a.addChildren(t)
                     else:
                         a.addChildren([Itemset(a, temp)])
-            if not a.getChildren(): #If the leaf is the end of the branch, delete the leaf and the childless ancestors
+            if not a.getChildren():  # If the leaf is the end of the branch, delete the leaf and the childless ancestors
                 temp = a.getParent()
                 temp.delChild(a)
                 while temp.getChildren() == [] and temp.getItemset() is not None:
@@ -185,7 +182,7 @@ class ItemMining:
 
 
 if __name__ == '__main__':
-    table = ItemMining("Dataset/txn_by_dept.csv", minSup=3, minConf=0.1)
+    table = ItemMining("Dataset/txn_by_dept.csv", minSup=3, minConf=0.5)
     print("***********************************************************")
     print("***********************************************************")
     print("1: Printing frequent itemsets")
@@ -210,6 +207,6 @@ if __name__ == '__main__':
     print("***********************************************************")
     print("***********************************************************")
     score = "confidence"  # Select score. Options: 'support', 'confidence', 'lift', and 'leverage'
-    topRules = rankRules(rules, k=20, m=score)
+    topRules = rankRules(rules, k=30, m=score)
     for rule in topRules:
         print(rule)
